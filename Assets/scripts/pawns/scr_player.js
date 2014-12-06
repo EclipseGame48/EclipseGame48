@@ -32,6 +32,7 @@ var hit : RaycastHit;
 var pushHit : RaycastHit;
 var solidHitLayer : LayerMask;
 var pushableHitLayer : LayerMask;
+var closestButton : GameObject;
 
 function Start()
 {
@@ -225,4 +226,11 @@ function OnControllerColliderHit(hit : ControllerColliderHit)
 		velocity.x = controller.velocity.x;
 		velocity.z = controller.velocity.z;
 	}
+	
+	var enemy = hit.gameObject.GetComponent(Enemy);
+	if( enemy )
+	{
+		enemy.Hit( velocity.y < -10 );
+	}
 }
+
