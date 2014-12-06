@@ -40,6 +40,7 @@ var Touch : ClassTouch;
 var controller : CharacterController;
 var hit : RaycastHit;
 var solidHitLayer : LayerMask;
+var pushableHitLayer : LayerMask;
 
 function Start()
 {
@@ -83,13 +84,29 @@ function Update()
 			if (!Physics.Raycast(transform.position+Vector3.up*0.1, -Vector3.up, 0.4, solidHitLayer))
 			{
 				velocity.y = -1;
-				if (Touch.offset.magnitude > 0.8)
+				if (velocity.magnitude > 3 && Input.GetMouseButton(0)) // Edge jumping
 				{ Jump(); }
 			}
 			else
 			{ velocity.y = -10; }
 		//}
 		
+		// Pushing objects
+		if (velocity.magnitude > 5)
+		{
+			if (Physics.Raycast(transform.position+Vector3.up, Vector3(velocity.x,0,velocity.z), hit, 1, pushableHitLayer))
+			{
+				//print("Pushing box");
+				if (velocity.x > 5)
+				{ hit.rigidbody.velocity.x = 4; }
+				if (velocity.x < -5)
+				{ hit.rigidbody.velocity.x = -4; }
+				if (velocity.z > 5)
+				{ hit.rigidbody.velocity.z = 4; }
+				if (velocity.z < -5)
+				{ hit.rigidbody.velocity.z = -4; }
+			}
+		}
 	}
 	else
 	{ jump = true; }
@@ -122,6 +139,9 @@ function TouchControls()
 	{
 		Touch.center = Input.mousePosition;
 		Touch.preLoc = Input.mousePosition;
+		
+		//if (jump)
+		//{ Jump(); }
 	}
 	else if ( Input.GetMouseButton(0) )
 	{
@@ -136,28 +156,28 @@ function TouchControls()
 		{ Touch.center = Input.mousePosition+Touch.offset*-Touch.range; }
 		
 		// Flicking
-		/*if (Touch.velocity.magnitude > 1)
+		if (Touch.velocity.magnitude > 0)
 		{ Touch.timer = 0.5; }
 		else
 		{
 			if (Touch.timer > 0)
 			{ Touch.timer -= Time.deltaTime; }
-		}*/
+		}
 	}
 	else
 	{ Touch.offset = Vector2.zero; }
 	
-	/*if ( Input.GetMouseButtonUp(0) )
+	if ( Input.GetMouseButtonUp(0) )
 	{
 		if (Touch.timer >= 0)
 		{
-			if (Touch.velocity.y > 15)
+			if (Touch.velocity.y > 2)
 			{ Jump(); }
 			
-			if (Touch.velocity.y < -15)
+			if (Touch.velocity.y < -2)
 			{ Stomp(); }
 		}
-	}*/
+	}
 	
 	preMoveVelocity = Vector2.Lerp(preMoveVelocity,Touch.offset,10*Time.deltaTime);
 	
@@ -169,7 +189,7 @@ function Jump()
 {
 	if (!jump)
 	{ JumpUp(); }
-	else if (doubleJumpEnabled && !jumpDouble && velocity.y < 2)
+	else if (doubleJumpEnabled && !jumpDouble)
 	{
 		jumpDouble = true;
 		JumpUp();
