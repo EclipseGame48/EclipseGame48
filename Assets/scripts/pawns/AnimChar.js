@@ -51,6 +51,8 @@ function Start()
 	applySpriteRenderer = child_sprites[0] as SpriteRenderer;
 	originalScaleX = applyGameObject.transform.localScale.x;
 	
+	applySpriteRenderer.castShadows = true;
+	
 	SetAnimation( startAnimation );
 	Turn( startIsRight );
 }

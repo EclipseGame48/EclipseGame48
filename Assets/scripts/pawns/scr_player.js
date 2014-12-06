@@ -118,7 +118,8 @@ function Update()
 	// Animate
 	var hspeed : float = Vector3(velocity.x,0,velocity.z).magnitude;
 	animchar.SetAnimation( hspeed > 0.5 ? "run" : "stand" );
-	animchar.Turn( velocity.x > 0 );
+	if( Mathf.Abs( velocity.x ) > 0.1 )
+		animchar.Turn( velocity.x > 0 );
 }
 
 function KeyboardControls()
