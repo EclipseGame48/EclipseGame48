@@ -19,7 +19,7 @@ class ClassCheats
 	var godMode : boolean;
 	var noclip : boolean;
 	
-	var player : Transform;
+	//var player : Transform;
 }
 
 var console : ClassConsole;
@@ -28,8 +28,8 @@ var cheats : ClassCheats;
 
 function Start()
 {
-	if (!cheats.player)
-	{ cheats.player = GameObject.Find("player").transform; }
+	//if (!cheats.player)
+	//{ cheats.player = GameObject.Find("player").transform; }
 	
 	if (GameObject.Find("gameSys").transform)
 	{
@@ -123,7 +123,7 @@ function executeCommand()
 		{ toggleNoclip(); }
 		else if (console.inputText == "reset") // Reset map
 		{ Application.LoadLevel(Application.loadedLevelName); }
-		else if (console.inputText == "kill" || console.inputText == "suicide") // Suicide
+		/*else if (console.inputText == "kill" || console.inputText == "suicide") // Suicide
 		{
 			if (cheats.player != null)
 			{
@@ -132,7 +132,7 @@ function executeCommand()
 			}
 			else
 			{ writeHistory("player not found"); }
-		}
+		}*/
 		else if (console.inputText == "quit" || console.inputText == "exit") // Reset map
 		{ Application.Quit(); }
 		else

@@ -1,4 +1,4 @@
-#pragma strict
+﻿#pragma strict
 
 // Stats
 var speed_ground = 80.0;
@@ -23,23 +23,13 @@ var preMoveVelocity : Vector2;
 var velocity : Vector3;
 
 // Controls
-class ClassTouch
-{
-	var range = 64.0;
-	var velocity : Vector2;
-	var offset : Vector2;
-	var center : Vector2;
-	
-	var preLoc : Vector2;
-
-	var timer : float;
-}
 var Touch : ClassTouch;
 
 // Other
 var controller : CharacterController;
 var animchar : AnimChar;
 var hit : RaycastHit;
+var pushHit : RaycastHit;
 var solidHitLayer : LayerMask;
 var pushableHitLayer : LayerMask;
 
@@ -94,19 +84,19 @@ function Update()
 		//}
 		
 		// Pushing objects
-		if (velocity.magnitude > 5)
+		if (Touch.offset.magnitude > 0.8)
 		{
-			if (Physics.Raycast(transform.position+Vector3.up, Vector3(velocity.x,0,velocity.z), hit, 1, pushableHitLayer))
+			if (Physics.Raycast(transform.position+Vector3.up, Vector3(Touch.offset.x,0,Touch.offset.y), pushHit, 1, pushableHitLayer))
 			{
 				//print("Pushing box");
-				if (velocity.x > 5)
-				{ hit.rigidbody.velocity.x = 4; }
-				if (velocity.x < -5)
-				{ hit.rigidbody.velocity.x = -4; }
-				if (velocity.z > 5)
-				{ hit.rigidbody.velocity.z = 4; }
-				if (velocity.z < -5)
-				{ hit.rigidbody.velocity.z = -4; }
+				if (Touch.offset.x > 0.8)
+				{ pushHit.collider.GetComponent(scr_pushcrate).PushForward(pushHit.transform.position+Vector3.right*2,1,true); }
+				if (Touch.offset.x < -0.8)
+				{ pushHit.collider.GetComponent(scr_pushcrate).PushForward(pushHit.transform.position+Vector3.right*-2,1,true); }
+				if (Touch.offset.y > 0.8)
+				{ pushHit.collider.GetComponent(scr_pushcrate).PushForward(pushHit.transform.position+Vector3.forward*2,1,true); }
+				if (Touch.offset.y < -0.8)
+				{ pushHit.collider.GetComponent(scr_pushcrate).PushForward(pushHit.transform.position+Vector3.forward*-2,1,true); }
 			}
 		}
 	}

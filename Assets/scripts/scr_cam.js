@@ -6,6 +6,8 @@ var target : Transform;
 var texTouch : Texture2D;
 var texTouchRange : Texture2D;
 
+var levelBrowser : boolean;
+
 private var offset = Vector3(0,5,-12);
 private var fps : float;
 
@@ -17,7 +19,10 @@ var position : Vector3;
 function Start()
 {
 	position = transform.position;
-	TouchRange = target.GetComponent(scr_player).Touch.range;
+	if (!levelBrowser)
+	{ TouchRange = target.GetComponent(scr_player).Touch.range; }
+	else
+	{ TouchRange = target.GetComponent(scr_browserTarget).Touch.range; }
 
 	findGameSys();
 }
@@ -50,7 +55,10 @@ function OnGUI()
 {
 	if (Input.GetMouseButton(0))
 	{
-		touchPos = target.GetComponent(scr_player).Touch.center;
+		if (!levelBrowser)
+		{ touchPos = target.GetComponent(scr_player).Touch.center; }
+		else
+		{ touchPos = target.GetComponent(scr_browserTarget).Touch.center; }
 		
 		GUI.DrawTexture(Rect(touchPos.x-TouchRange,Screen.height-touchPos.y-TouchRange,TouchRange*2,TouchRange*2), texTouchRange);
 		GUI.DrawTexture(Rect(Input.mousePosition.x-TouchRange*0.5,Screen.height-Input.mousePosition.y-TouchRange*0.5,TouchRange,TouchRange), texTouch);
