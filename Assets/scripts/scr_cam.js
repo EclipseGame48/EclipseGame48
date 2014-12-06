@@ -22,7 +22,11 @@ function Start()
 	if (!levelBrowser)
 	{ TouchRange = target.GetComponent(scr_player).Touch.range; }
 	else
-	{ TouchRange = target.GetComponent(scr_browserTarget).Touch.range; }
+	{
+		TouchRange = target.GetComponent(scr_browserTarget).Touch.range;
+		offset = Vector3(0,1,-20);
+		transform.eulerAngles.x = 0;
+	}
 
 	findGameSys();
 }

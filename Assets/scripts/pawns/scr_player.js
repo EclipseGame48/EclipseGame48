@@ -16,7 +16,6 @@ var doubleJumpEnabled : boolean;
 // States
 var jump : boolean;
 var jumpDouble : boolean;
-var jumpCanTimer : float;
 var dead : boolean;
 
 // Physics
@@ -33,6 +32,7 @@ var hit : RaycastHit;
 var pushHit : RaycastHit;
 var solidHitLayer : LayerMask;
 var pushableHitLayer : LayerMask;
+var closestButton : GameObject;
 
 function Start()
 {
@@ -57,10 +57,6 @@ function Update()
 		velocity = Vector3(tempVel.x,velocity.y,tempVel.y);
 	}
 	
-	// Jumping timer
-	if (jumpCanTimer > 0)
-	{ jumpCanTimer -= Time.deltaTime; }
-	
 	// Checking ground
 	if ((controller.collisionFlags & CollisionFlags.Below))
 	{
@@ -75,7 +71,6 @@ function Update()
 				damping = damping_ground;
 				speed = speed_ground;
 				velocity.y = 0;
-				jumpCanTimer = 0.2;
 			}
 			
 			// Keep normal velocity on platforms
@@ -161,7 +156,7 @@ function TouchControls()
 		
 		// Flicking
 		if (Touch.velocity.magnitude > 0)
-		{ Touch.timer = 1.0; }
+		{ Touch.timer = 0.5; }
 		else
 		{
 			if (Touch.timer > 0)
@@ -191,15 +186,12 @@ function TouchControls()
 
 function Jump()
 {
-	if (jumpCanTimer <= 0)
+	if (!jump)
+	{ JumpUp(); }
+	else if (doubleJumpEnabled && !jumpDouble)
 	{
-		if (!jump)
-		{ JumpUp(); }
-		else if (doubleJumpEnabled && !jumpDouble)
-		{
-			jumpDouble = true;
-			JumpUp();
-		}
+		jumpDouble = true;
+		JumpUp();
 	}
 }
 
@@ -234,4 +226,11 @@ function OnControllerColliderHit(hit : ControllerColliderHit)
 		velocity.x = controller.velocity.x;
 		velocity.z = controller.velocity.z;
 	}
+	
+	var enemy = hit.gameObject.GetComponent(Enemy);
+	if( enemy )
+	{
+		enemy.Hit( velocity.y < -10 );
+	}
 }
+

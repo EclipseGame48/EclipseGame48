@@ -26,4 +26,13 @@ function Update()
 	}
 	
 	transform.position += Vector3(Touch.offset.x,Touch.offset.y,0)*10*Time.deltaTime;
+	
+	if (transform.position.x < -15)
+	{ transform.position.x = -15; }
+	if (transform.position.x > 15)
+	{ transform.position.x = 15; }
+	if (transform.position.y < 2)
+	{ transform.position.y = 2; }
+	if (transform.position.y > 30)
+	{ transform.position.y = 30; }
 }
