@@ -1,4 +1,4 @@
-﻿#pragma strict
+#pragma strict
 
 // Stats
 var speed_ground = 80.0;
@@ -38,6 +38,7 @@ var Touch : ClassTouch;
 
 // Other
 var controller : CharacterController;
+var animchar : AnimChar;
 var hit : RaycastHit;
 var solidHitLayer : LayerMask;
 var pushableHitLayer : LayerMask;
@@ -45,6 +46,7 @@ var pushableHitLayer : LayerMask;
 function Start()
 {
 	controller = GetComponent(CharacterController);
+	animchar = GetComponent(AnimChar);
 }
 
 function Update()
@@ -122,6 +124,11 @@ function Update()
 	
 	// Move body
 	controller.Move(velocity*Time.deltaTime);
+	
+	// Animate
+	var hspeed : float = Vector3(velocity.x,0,velocity.z).magnitude;
+	animchar.SetAnimation( hspeed > 0.5 ? "run" : "stand" );
+	animchar.Turn( velocity.x > 0 );
 }
 
 function KeyboardControls()
