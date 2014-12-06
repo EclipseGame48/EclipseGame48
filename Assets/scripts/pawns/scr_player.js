@@ -28,7 +28,7 @@ var Touch : ClassTouch;
 
 // Other
 var controller : CharacterController;
-var animchar : AnimChar;
+//var animchar : AnimChar;
 var hit : RaycastHit;
 var pushHit : RaycastHit;
 var solidHitLayer : LayerMask;
@@ -38,7 +38,7 @@ var closestButton : GameObject;
 function Start()
 {
 	controller = GetComponent(CharacterController);
-	animchar = GetComponent(AnimChar);
+	//animchar = GetComponent(AnimChar);
 }
 
 function Update()
@@ -121,10 +121,10 @@ function Update()
 	controller.Move(velocity*Time.deltaTime);
 	
 	// Animate
-	var hspeed : float = Vector3(velocity.x,0,velocity.z).magnitude;
+	/*var hspeed : float = Vector3(velocity.x,0,velocity.z).magnitude;
 	animchar.SetAnimation( hspeed > 0.5 ? "run" : "stand" );
 	if( Mathf.Abs( velocity.x ) > 0.1 )
-		animchar.Turn( velocity.x > 0 );
+		animchar.Turn( velocity.x > 0 );*/
 }
 
 function KeyboardControls()
