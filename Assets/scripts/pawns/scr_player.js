@@ -21,6 +21,7 @@ var dead : boolean;
 // Physics
 var preMoveVelocity : Vector2;
 var velocity : Vector3;
+var prevOnGround : boolean;
 
 // Controls
 var Touch : ClassTouch;
@@ -45,7 +46,7 @@ function Update()
 	// Keyboard Controls
 	KeyboardControls();
 	// Touch Controls
-	TouchControls();
+	TouchControls_v2();
 	
 	// Physics
 	velocity.x = Mathf.Lerp(velocity.x,0,damping*Time.deltaTime);
@@ -74,7 +75,10 @@ function Update()
 			}
 			
 			// Keep normal velocity on platforms
-			if (!Physics.Raycast(transform.position+Vector3.up*0.1, -Vector3.up, 0.4, solidHitLayer))
+			var rc_cur = Physics.Raycast(transform.position+Vector3.up*0.1, -Vector3.up, 0.4, solidHitLayer);
+			var need_jump = !rc_cur && prevOnGround;
+			prevOnGround = rc_cur;
+			if (need_jump)
 			{
 				velocity.y = -1;
 				if (velocity.magnitude > 3 && Input.GetMouseButton(0)) // Edge jumping
@@ -129,6 +133,51 @@ function KeyboardControls()
 	velocity.z += Input.GetAxis("Vertical")*speed*Time.deltaTime;
 	if (Input.GetButtonDown("Jump"))
 	{ Jump(); }
+}
+
+function TouchControls_v2()
+{
+	var movedir : Vector2;
+	if( Input.GetMouseButton(0) )
+	{
+		var ray : Ray = Camera.main.ScreenPointToRay( Input.mousePosition );
+		var hit : RaycastHit;
+		if( Physics.Raycast( ray, hit, 1000, 0x0001 ) )
+		{
+			var dir : Vector3 = hit.point - transform.position;
+			var is_surface_point = Vector3.Dot( hit.normal, Vector3(0,1,0) ) > 0.8;
+			
+			// special hack: exclude points substantially further than player from camera AND from top at the same time
+			if( is_surface_point &&
+				Vector3.Dot( ray.direction, hit.point ) > Vector3.Dot( ray.direction, transform.position ) + 2 &&
+				Vector3.Dot( Vector3(0,-1,0), hit.point ) > Vector3.Dot( Vector3(0,-1,0), transform.position ) + 1 )
+			{
+				is_surface_point = false;
+			}
+			
+			if( is_surface_point )
+			{
+				movedir = Vector2(dir.x,dir.z).normalized;
+				
+				var hdist = Mathf.Sqrt( dir.x * dir.x + dir.z * dir.z );
+				var vdist = dir.y;
+				if( vdist > 1 && vdist < 5 )
+				{
+					var q = hdist - vdist;
+				//	Debug.Log( "hdist = " + hdist + ", vdist = " + vdist + ", q = " + q + ", dot = " + Vector2.Dot( preMoveVelocity, movedir.normalized ) );
+					if( hdist < 5 && q > -2 && q < 4 && Vector2.Dot( preMoveVelocity, movedir.normalized ) > 0.9 )
+						Jump();
+				}
+			}
+			else
+				movedir = Vector2(dir.x,0).normalized;
+		}
+	}
+	
+	preMoveVelocity = Vector2.Lerp(preMoveVelocity,movedir*1.2,10*Time.deltaTime);
+	
+	velocity.x += preMoveVelocity.x * speed * Time.deltaTime;
+	velocity.z += preMoveVelocity.y * speed * Time.deltaTime;
 }
 
 function TouchControls()
