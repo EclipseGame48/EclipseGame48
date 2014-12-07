@@ -24,6 +24,6 @@ function LateUpdate()
 
 function Die()
 {
-	Instantiate(debris, model.position, model.rotation*Quaternion.Euler(90,0,0));
+	//Instantiate(debris, model.position, model.rotation);
 	Destroy(gameObject);
 }
