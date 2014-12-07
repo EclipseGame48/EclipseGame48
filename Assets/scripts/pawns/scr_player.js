@@ -42,6 +42,7 @@ var hit : RaycastHit;
 var pushHit : RaycastHit;
 var solidHitLayer : LayerMask;
 var pushableHitLayer : LayerMask;
+var quickJumpLayer : LayerMask;
 var closestButton : GameObject;
 
 @HideInInspector
@@ -148,7 +149,7 @@ function Update()
 		// Pushing objects
 		if (Vector3(velocity.x,0,velocity.z).magnitude > 2)
 		{
-			if (Physics.Raycast(transform.position+Vector3.up, Vector3(velocity.x,0,velocity.y), pushHit, 1, pushableHitLayer))
+			if (Physics.Raycast(transform.position+Vector3.up, Vector3(velocity.x,0,velocity.z), pushHit, 1, pushableHitLayer))
 			{
 				var pushPos = pushHit.transform.position;
 				//print("Pushing box");
@@ -247,13 +248,13 @@ function TouchControls_v3()
 	//	Debug.DrawLine( ray2.origin, ray2.origin + ray2.direction * 2 );
 		var hit : RaycastHit;
 		if( Vector2(velocity.x,velocity.z).magnitude > 0.5 &&
-			Physics.Raycast( ray2, hit, 2, solidHitLayer ) &&
+			Physics.Raycast( ray2, hit, 2, quickJumpLayer ) &&
 			Mathf.Abs( Vector3.Dot( hit.normal, Vector3(0,1,0) ) ) < 0.1 &&
 			hit.point.z > transform.position.z )
 		{
 			ray2.origin = hit.point - hit.normal + Vector3(0,2,0);
 			ray2.direction = Vector3(0,-1,0);
-			if( Physics.Raycast( ray2, hit, 2, solidHitLayer ) )
+			if( Physics.Raycast( ray2, hit, 2, quickJumpLayer ) )
 			{
 				Jump();
 			}
