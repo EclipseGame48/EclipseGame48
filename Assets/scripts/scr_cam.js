@@ -22,6 +22,17 @@ var position : Vector3;
 
 var uiStyle : GUIStyle;
 
+
+
+
+var fadeSpeed : float = 1;
+
+private var fadeLevel : float = -1;
+private var fadeTarget : float = 0;
+private var fadeObjBack : GameObject;
+
+
+
 function Start()
 {
 	position = transform.position;
@@ -39,6 +50,14 @@ function Start()
 
 function Update()
 {
+	// FADING
+	fadeLevel += Mathf.Sign( fadeTarget - fadeLevel ) * Mathf.Min( Time.deltaTime * fadeSpeed, Mathf.Abs( fadeTarget - fadeLevel ) );
+	if( fadeLevel == 1 )
+	{
+		fadeObjBack.SendMessage( "FadeOutFinished" );
+	}
+	
+	
 	// Debug stuff
 	if ( Time.timeScale != 0 )
 	{
@@ -84,3 +103,89 @@ function OnGUI()
 
 function findGameSys()
 { gameSys = GameObject.Find("gameSys").transform; }
+
+
+
+function BeginFadeOut( objback : GameObject )
+{
+	fadeTarget = 1;
+	fadeObjBack = objback;
+}
+
+
+static var colorMaterial : Material;
+static function CreateColorMaterial()
+{
+	if( !colorMaterial )
+	{
+		colorMaterial = new Material( "Shader \"Vertex Color Only\" {" +
+			"SubShader { Pass { " +
+			"    Blend SrcAlpha OneMinusSrcAlpha " +
+			"    ZWrite Off Cull Off Fog { Mode Off } " +
+			"    BindChannels {" +
+			"      Bind \"vertex\", vertex Bind \"color\", color }" +
+			"} } }" );
+		colorMaterial.hideFlags = HideFlags.HideAndDontSave;
+		colorMaterial.shader.hideFlags = HideFlags.HideAndDontSave;
+	}
+}
+
+function OnPostRender()
+{
+	if( fadeLevel != 0 )
+	{
+		CreateColorMaterial();
+		colorMaterial.SetPass( 0 );
+		
+		var finsize : float = 0.1;
+		var fullwidth : float = 1.0;
+		var z : float = 0.1;
+		var x0 : float = 0 - fadeLevel * ( finsize + fullwidth );
+		var x1 : float = 1 - fadeLevel * ( finsize + fullwidth );
+		var x0f : float = x0 - finsize;
+		var x1f : float = x1 + finsize;
+		var x0b : float = x0f - fullwidth;
+		var x1b : float = x1f + fullwidth;
+		var y0 : float = 0;
+		var y1 : float = 1;
+		
+		GL.PushMatrix();
+		GL.LoadOrtho();
+		GL.Begin( GL.QUADS );
+		if( fadeLevel < 0 )
+		{
+			// draw left side
+			GL.Color( Color(0,0,0,1) );
+			// q1 (black)
+			GL.Vertex3( x0b, y1, z );
+			GL.Vertex3( x0b, y0, z );
+			GL.Vertex3( x0f, y0, z );
+			GL.Vertex3( x0f, y1, z );
+			// q2 (gradient)
+			GL.Vertex3( x0f, y1, z );
+			GL.Vertex3( x0f, y0, z );
+			GL.Color( Color(0,0,0,0) );
+			GL.Vertex3( x0, y0, z );
+			GL.Vertex3( x0, y1, z );
+		}
+		else
+		{
+			// draw right side
+			GL.Color( Color(0,0,0,1) );
+			// q1 (black)
+			GL.Vertex3( x1b, y1, z );
+			GL.Vertex3( x1b, y0, z );
+			GL.Vertex3( x1f, y0, z );
+			GL.Vertex3( x1f, y1, z );
+			// q2 (gradient)
+			GL.Vertex3( x1f, y1, z );
+			GL.Vertex3( x1f, y0, z );
+			GL.Color( Color(0,0,0,0) );
+			GL.Vertex3( x1, y0, z );
+			GL.Vertex3( x1, y1, z );
+		}
+		GL.End();
+		GL.PopMatrix();
+	}
+}
+
