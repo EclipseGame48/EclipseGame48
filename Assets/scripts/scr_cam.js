@@ -83,9 +83,7 @@ function Update()
 function OnGUI()
 {
 	if (GUI.Button(Rect(Screen.width-128,0,128,128),texPause,uiStyle))
-	{
-		
-	}
+	{ Application.LoadLevel(Application.loadedLevelName); }
 
 	if (Input.GetMouseButton(0))
 	{

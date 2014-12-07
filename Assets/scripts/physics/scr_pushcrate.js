@@ -42,7 +42,7 @@ function PushForward(to : Vector3, sp : float, chck : boolean)
 {
 	if (!moving)
 	{
-		if (!Physics.Raycast(transform.position+Vector3.up, to-transform.position, 2.5, solidHitLayer))
+		if (!Physics.Raycast(transform.position-Vector3.up*0.5, to-transform.position, 2.5, solidHitLayer))
 		{
 			moving = true;
 			moveT = 0.0;

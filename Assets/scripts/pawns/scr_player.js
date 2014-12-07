@@ -31,6 +31,10 @@ var prevOnGround : boolean;
 // Controls
 var Touch : ClassTouch;
 
+// Sounds
+var soundJump : AudioClip;
+var soundLand : AudioClip;
+
 // Other
 var controller : CharacterController;
 //var animchar : AnimChar;
@@ -96,6 +100,9 @@ function Update()
 				{
 					anim.GetComponent.<Animation>()["land"].wrapMode = WrapMode.Once;
 					anim.GetComponent.<Animation>().CrossFade("land", 0.1);
+					
+					var AudioObj = PlayClipAt(soundLand, transform.position);
+					AudioObj.audio.minDistance = 2;
 				}
 				
 				// Stop movement
@@ -129,27 +136,30 @@ function Update()
 			{
 				//velocity.y = -1;
 				if (velocity.magnitude > 3 && (Input.GetMouseButton(0) || goingToWaypoint)) // Edge jumping
-				{ Jump(); }
+				{
+					if (!Physics.Raycast(transform.position+Vector3.up*0.1, -Vector3.up, 1.5, solidHitLayer))
+					{ Jump(); }
+				}
 			}
 			//else
 			//{ velocity.y = -10; }
 		//}
 		
 		// Pushing objects
-		if (velocity.magnitude > 0.8)
+		if (Vector3(velocity.x,0,velocity.z).magnitude > 2)
 		{
 			if (Physics.Raycast(transform.position+Vector3.up, Vector3(velocity.x,0,velocity.y), pushHit, 1, pushableHitLayer))
 			{
 				var pushPos = pushHit.transform.position;
 				//print("Pushing box");
 				if (velocity.x > 0.8 && transform.position.z > pushPos.z-1 && transform.position.z < pushPos.z+1)
-				{ pushHit.collider.GetComponent(scr_pushcrate).PushForward(pushHit.transform.position+Vector3.right*2,1,true); }
+				{ pushHit.collider.GetComponent(scr_pushcrate).PushForward(pushHit.transform.position+Vector3.right*2,3,true); }
 				if (velocity.x < -0.8 && transform.position.z > pushPos.z-1 && transform.position.z < pushPos.z+1)
-				{ pushHit.collider.GetComponent(scr_pushcrate).PushForward(pushHit.transform.position+Vector3.right*-2,1,true); }
-				if (velocity.y > 0.8 && transform.position.x > pushPos.x-1 && transform.position.x < pushPos.x+1)
-				{ pushHit.collider.GetComponent(scr_pushcrate).PushForward(pushHit.transform.position+Vector3.forward*2,1,true); }
-				if (velocity.y < -0.8 && transform.position.x > pushPos.x-1 && transform.position.x < pushPos.x+1)
-				{ pushHit.collider.GetComponent(scr_pushcrate).PushForward(pushHit.transform.position+Vector3.forward*-2,1,true); }
+				{ pushHit.collider.GetComponent(scr_pushcrate).PushForward(pushHit.transform.position+Vector3.right*-2,3,true); }
+				if (velocity.z > 0.8 && transform.position.x > pushPos.x-1 && transform.position.x < pushPos.x+1)
+				{ pushHit.collider.GetComponent(scr_pushcrate).PushForward(pushHit.transform.position+Vector3.forward*2,3,true); }
+				if (velocity.z < -0.8 && transform.position.x > pushPos.x-1 && transform.position.x < pushPos.x+1)
+				{ pushHit.collider.GetComponent(scr_pushcrate).PushForward(pushHit.transform.position+Vector3.forward*-2,3,true); }
 			}
 		}
 	}
@@ -301,7 +311,7 @@ function TouchControls_v3()
 		// Jump over obstacles
 		if (waypoint.y > myPos.y)
 		{
-			if (Physics.Raycast(transform.position+Vector3.up, Vector3(waypoint.x,0,waypoint.z)-Vector3(myPos.x,0,myPos.z), 2, solidHitLayer))
+			if (Physics.Raycast(transform.position+Vector3.up*0.5, Vector3(waypoint.x,0,waypoint.z)-Vector3(myPos.x,0,myPos.z), 2, solidHitLayer))
 			{
 				if (waypoint.y-myPos.y > 3) // If too high, give up
 				{ goingToWaypoint = false; }
@@ -440,6 +450,9 @@ function Jump()
 
 function JumpUp()
 {
+	var AudioObj = PlayClipAt(soundJump, transform.position);
+	AudioObj.audio.minDistance = 2;
+
 	controller.Move(Vector3.up*0.001);
 	velocity.y = 10;
 	
