@@ -49,6 +49,7 @@ var pushableHitLayer : LayerMask;
 var quickJumpLayer : LayerMask;
 var closestButton : GameObject;
 
+
 @HideInInspector
 var anim : Transform;
 
