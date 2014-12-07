@@ -192,9 +192,7 @@ function LateUpdate()
 		{ animEuler = Vector3.zero; }
 		
 		if( turnTarget.w )
-		{
-			anim.rotation = Quaternion.Lerp(anim.rotation, turnTarget*Quaternion.Euler(animEuler), 15*Time.deltaTime);
-		}
+		{ anim.rotation = Quaternion.Lerp(anim.rotation, turnTarget*Quaternion.Euler(animEuler), 15*Time.deltaTime); }
 	}
 }
 
