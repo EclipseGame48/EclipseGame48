@@ -233,6 +233,22 @@ function TouchControls_v3()
 			{ goingToWaypoint = false; }
 		}
 		
+		var ray2 : Ray = new Ray( transform.position + Vector3(0,1.5,0), anim.rotation * Vector3(0,0,1) );
+	//	Debug.DrawLine( ray2.origin, ray2.origin + ray2.direction * 2 );
+		var hit : RaycastHit;
+		if( Vector2(velocity.x,velocity.z).magnitude > 0.5 &&
+			Physics.Raycast( ray2, hit, 2, solidHitLayer ) &&
+			Mathf.Abs( Vector3.Dot( hit.normal, Vector3(0,1,0) ) ) < 0.1 &&
+			hit.point.z > transform.position.z )
+		{
+			ray2.origin = hit.point - hit.normal + Vector3(0,2,0);
+			ray2.direction = Vector3(0,-1,0);
+			if( Physics.Raycast( ray2, hit, 2, solidHitLayer ) )
+			{
+				Jump();
+			}
+		}
+		
 		// Flicking
 		if (Touch.velocity.magnitude > 0)
 		{ Touch.timer = 0.5; }
