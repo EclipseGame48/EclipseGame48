@@ -35,6 +35,10 @@ var Touch : ClassTouch;
 var soundJump : AudioClip;
 var soundLand : AudioClip;
 
+// Particles
+var fxJump : Transform;
+var fxLand : Transform;
+
 // Other
 var controller : CharacterController;
 //var animchar : AnimChar;
@@ -102,8 +106,12 @@ function Update()
 					anim.GetComponent.<Animation>()["land"].wrapMode = WrapMode.Once;
 					anim.GetComponent.<Animation>().CrossFade("land", 0.1);
 					
+					// Sound
 					var AudioObj = PlayClipAt(soundLand, transform.position);
 					AudioObj.audio.minDistance = 2;
+					
+					// Particles
+					Instantiate(fxLand,transform.position,Quaternion.identity*Quaternion.Euler(90,0,0));
 				}
 				
 				// Stop movement
@@ -451,8 +459,12 @@ function Jump()
 
 function JumpUp()
 {
+	// Sound
 	var AudioObj = PlayClipAt(soundJump, transform.position);
 	AudioObj.audio.minDistance = 2;
+	
+	// Particles
+	Instantiate(fxJump,transform.position,Quaternion.identity*Quaternion.Euler(90,0,0));
 
 	controller.Move(Vector3.up*0.001);
 	velocity.y = 10;
