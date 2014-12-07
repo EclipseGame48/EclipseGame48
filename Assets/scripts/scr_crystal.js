@@ -24,6 +24,6 @@ function LateUpdate()
 
 function Die()
 {
-	//Instantiate(debris, model.position, model.rotation);
+	Instantiate(debris, model.position, model.rotation);
 	Destroy(gameObject);
 }
