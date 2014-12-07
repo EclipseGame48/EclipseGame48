@@ -13,6 +13,12 @@ function OnTriggerEnter( col : Collider )
 
 function FadeOutFinished()
 {
+	if( targetLevel == "EXIT" )
+	{
+		Application.Quit();
+		Debug.Log( "QUIT!" );
+		return;
+	}
 	Application.LoadLevel( targetLevel );
 }
 
