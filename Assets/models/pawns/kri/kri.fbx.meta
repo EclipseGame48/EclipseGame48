@@ -133,6 +133,7 @@ ModelImporter:
     7400004: jump
     7400006: run
     7400008: stand
+    7400010: land
     9500000: //RootNode
     11100000: //RootNode
     13700000: BackPack

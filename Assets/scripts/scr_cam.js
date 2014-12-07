@@ -6,9 +6,13 @@ var target : Transform;
 var texTouch : Texture2D;
 var texTouchRange : Texture2D;
 
+var texPause : Texture2D;
+
 var levelBrowser : boolean;
 
-private var offset = Vector3(0,5,-12);
+var axes : Vector3;
+
+var offset = Vector3(0,5,-8);
 private var fps : float;
 
 var touchPos : Vector2;
@@ -16,12 +20,14 @@ var TouchRange : float;
 
 var position : Vector3;
 
+var uiStyle : GUIStyle;
+
 function Start()
 {
 	position = transform.position;
 	if (!levelBrowser)
 	{ TouchRange = target.GetComponent(scr_player).Touch.range; }
-	else
+	if (levelBrowser)
 	{
 		TouchRange = target.GetComponent(scr_browserTarget).Touch.range;
 		offset = Vector3(0,1,-20);
@@ -46,7 +52,7 @@ function Update()
 	}
 			
 	// Camera movement
-	position = Vector3.Lerp(position,Vector3(target.position.x,target.position.y,0)+offset,10*Time.deltaTime);
+	position = Vector3.Lerp(position,Vector3(target.position.x*axes.x,target.position.y*axes.y,target.position.z*axes.z)+offset,10*Time.deltaTime);
 	
 	transform.position = position;
 	
@@ -57,6 +63,11 @@ function Update()
 
 function OnGUI()
 {
+	if (GUI.Button(Rect(Screen.width-128,0,128,128),texPause,uiStyle))
+	{
+		
+	}
+
 	if (Input.GetMouseButton(0))
 	{
 		if (!levelBrowser)
