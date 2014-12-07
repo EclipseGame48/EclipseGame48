@@ -18,6 +18,11 @@ var jump : boolean;
 var jumpDouble : boolean;
 var dead : boolean;
 
+// Wayponts
+var waypointTimer : float;
+var goingToWaypoint : boolean;
+var waypoint : Vector3;
+
 // Physics
 var preMoveVelocity : Vector2;
 var velocity : Vector3;
@@ -35,10 +40,22 @@ var solidHitLayer : LayerMask;
 var pushableHitLayer : LayerMask;
 var closestButton : GameObject;
 
+@HideInInspector
+var anim : Transform;
+
 function Start()
 {
 	controller = GetComponent(CharacterController);
+	anim = transform.Find("kri");
 	//animchar = GetComponent(AnimChar);
+	
+	// Setup animations
+	anim.GetComponent.<Animation>()["stand"].layer = 1;
+	anim.GetComponent.<Animation>()["run"].layer = 1;
+	anim.GetComponent.<Animation>()["run"].speed = 1.2;
+	anim.GetComponent.<Animation>()["jump"].layer = 2;
+	anim.GetComponent.<Animation>()["fall"].layer = 1;
+	anim.GetComponent.<Animation>()["land"].layer = 1;
 }
 
 function Update()
@@ -46,7 +63,7 @@ function Update()
 	// Keyboard Controls
 	KeyboardControls();
 	// Touch Controls
-	TouchControls_v2();
+	TouchControls_v3();
 	
 	// Physics
 	velocity.x = Mathf.Lerp(velocity.x,0,damping*Time.deltaTime);
@@ -71,36 +88,67 @@ function Update()
 				jumpDouble = false;
 				damping = damping_ground;
 				speed = speed_ground;
-				velocity.y = 0;
+				
+				anim.GetComponent.<Animation>().Stop("jump");
+				
+				// Do landing animation
+				if (velocity.y < -6)
+				{
+					anim.GetComponent.<Animation>()["land"].wrapMode = WrapMode.Once;
+					anim.GetComponent.<Animation>().CrossFade("land", 0.1);
+				}
+				
+				// Stop movement
+				if (Input.GetMouseButton(0))
+				{ velocity.y = 0; }
+				else
+				{ velocity = Vector3.zero; }
+			}
+			
+			// Stand/Run
+			if (Vector3(velocity.x,0,velocity.z).magnitude > 3) // Running animation
+			{
+				anim.GetComponent.<Animation>()["run"].wrapMode = WrapMode.Loop;
+				anim.GetComponent.<Animation>().CrossFade("run", 0.1);
+			}
+			else // Standing animation
+			{
+				if (!anim.GetComponent.<Animation>().IsPlaying("land"))
+				{
+					anim.GetComponent.<Animation>()["stand"].wrapMode = WrapMode.Loop;
+					anim.GetComponent.<Animation>().CrossFade("stand", 0.1);
+				}
 			}
 			
 			// Keep normal velocity on platforms
+			velocity.y = -1;
 			var rc_cur = Physics.Raycast(transform.position+Vector3.up*0.1, -Vector3.up, 0.4, solidHitLayer);
 			var need_jump = !rc_cur && prevOnGround;
 			prevOnGround = rc_cur;
 			if (need_jump)
 			{
-				velocity.y = -1;
-				if (velocity.magnitude > 3 && Input.GetMouseButton(0)) // Edge jumping
+				//velocity.y = -1;
+				if (velocity.magnitude > 3 && (Input.GetMouseButton(0) || goingToWaypoint)) // Edge jumping
 				{ Jump(); }
 			}
-			else
-			{ velocity.y = -10; }
+			//else
+			//{ velocity.y = -10; }
 		//}
 		
 		// Pushing objects
-		if (Touch.offset.magnitude > 0.8)
+		if (velocity.magnitude > 0.8)
 		{
-			if (Physics.Raycast(transform.position+Vector3.up, Vector3(Touch.offset.x,0,Touch.offset.y), pushHit, 1, pushableHitLayer))
+			if (Physics.Raycast(transform.position+Vector3.up, Vector3(velocity.x,0,velocity.y), pushHit, 1, pushableHitLayer))
 			{
+				var pushPos = pushHit.transform.position;
 				//print("Pushing box");
-				if (Touch.offset.x > 0.8)
+				if (velocity.x > 0.8 && transform.position.z > pushPos.z-1 && transform.position.z < pushPos.z+1)
 				{ pushHit.collider.GetComponent(scr_pushcrate).PushForward(pushHit.transform.position+Vector3.right*2,1,true); }
-				if (Touch.offset.x < -0.8)
+				if (velocity.x < -0.8 && transform.position.z > pushPos.z-1 && transform.position.z < pushPos.z+1)
 				{ pushHit.collider.GetComponent(scr_pushcrate).PushForward(pushHit.transform.position+Vector3.right*-2,1,true); }
-				if (Touch.offset.y > 0.8)
+				if (velocity.y > 0.8 && transform.position.x > pushPos.x-1 && transform.position.x < pushPos.x+1)
 				{ pushHit.collider.GetComponent(scr_pushcrate).PushForward(pushHit.transform.position+Vector3.forward*2,1,true); }
-				if (Touch.offset.y < -0.8)
+				if (velocity.y < -0.8 && transform.position.x > pushPos.x-1 && transform.position.x < pushPos.x+1)
 				{ pushHit.collider.GetComponent(scr_pushcrate).PushForward(pushHit.transform.position+Vector3.forward*-2,1,true); }
 			}
 		}
@@ -113,6 +161,10 @@ function Update()
 		jump = true;
 		damping = damping_air;
 		speed = speed_air;
+		
+		anim.GetComponent.<Animation>()["fall"].wrapMode = WrapMode.Loop;
+		anim.GetComponent.<Animation>().CrossFade("fall", 0.1);
+		
 		// Gravity
 		velocity += Physics.gravity*Time.deltaTime;
 	}
@@ -127,12 +179,129 @@ function Update()
 		animchar.Turn( velocity.x > 0 );*/
 }
 
+function LateUpdate()
+{
+	if (Time.time != 0 && Time.deltaTime != 0)
+	{
+		if (Vector3(velocity.x,0,velocity.z).magnitude > 1 && !jump)
+		{ var turnTarget = Quaternion.LookRotation(Vector3(velocity.x,0,velocity.z), Vector3.up); }
+		
+		if (jump)
+		{ var animEuler = Vector3(0,0,Vector3(velocity.x,0,velocity.z).magnitude*velocity.y*10); }
+		else
+		{ animEuler = Vector3.zero; }
+		
+		anim.rotation = Quaternion.Lerp(anim.rotation, turnTarget*Quaternion.Euler(animEuler), 15*Time.deltaTime);
+	}
+}
+
 function KeyboardControls()
 {
 	velocity.x += Input.GetAxis("Horizontal")*speed*Time.deltaTime;
 	velocity.z += Input.GetAxis("Vertical")*speed*Time.deltaTime;
 	if (Input.GetButtonDown("Jump"))
 	{ Jump(); }
+}
+
+function TouchControls_v3()
+{
+	// Calculate touch movement velocity
+	if ( Input.GetMouseButtonDown(0) )
+	{
+		Touch.center = Input.mousePosition;
+		Touch.preLoc = Input.mousePosition;
+		
+		waypointTimer = 0.3;
+	}
+	else if ( Input.GetMouseButton(0) )
+	{
+		// Calculate velocity
+		Touch.velocity = Input.mousePosition - Touch.preLoc;
+		Touch.preLoc = Input.mousePosition;
+		
+		// Touch functionality
+		if (Vector2.Distance(Touch.offset,Touch.center) > 10)
+		{ Touch.offset = ((Input.mousePosition - Touch.center)).normalized; }
+		if (Vector2.Distance(Input.mousePosition,Touch.center) > Touch.range)
+		{ Touch.center = Input.mousePosition+Touch.offset*-Touch.range; }
+		
+		// Cancel waypoints
+		if (goingToWaypoint)
+		{
+			if (Vector2.Distance(Touch.offset,Touch.center) > 3)
+			{ goingToWaypoint = false; }
+		}
+		
+		// Flicking
+		if (Touch.velocity.magnitude > 0)
+		{ Touch.timer = 0.5; }
+		else
+		{
+			if (Touch.timer > 0)
+			{ Touch.timer -= Time.deltaTime; }
+		}
+	}
+	else
+	{ Touch.offset = Vector2.zero; }
+	
+	if (waypointTimer > 0)
+	{ waypointTimer -= Time.deltaTime; }
+	
+	if ( Input.GetMouseButtonUp(0) )
+	{
+		// Set waypoints
+		if (waypointTimer > 0 && Touch.velocity.magnitude < 0.8)
+		{
+			var ray : Ray = Camera.main.ScreenPointToRay( Input.mousePosition );
+			var wayHit : RaycastHit;
+			if( Physics.Raycast( ray, wayHit, 1000, solidHitLayer ) )
+			{
+				if (wayHit.normal.y > 0.8)
+				{
+					print("Going to waypoint!");
+					goingToWaypoint = true;
+					waypoint = wayHit.point;
+				}
+			}
+		}
+	
+		// Flicking
+		/*if (Touch.timer >= 0)
+		{
+			if (Touch.velocity.y > 2)
+			{ Jump(); }
+			
+			if (Touch.velocity.y < -2)
+			{ Stomp(); }
+		}*/
+	}
+	
+	if (goingToWaypoint)
+	{
+		var myPos = transform.position;
+		preMoveVelocity = Vector2.Lerp(preMoveVelocity,Vector2(waypoint.x,waypoint.z)-Vector2(myPos.x,myPos.z),10*Time.deltaTime);
+		
+		// Jump over obstacles
+		if (waypoint.y > myPos.y)
+		{
+			if (Physics.Raycast(transform.position+Vector3.up, Vector3(waypoint.x,0,waypoint.z)-Vector3(myPos.x,0,myPos.z), 2, solidHitLayer))
+			{
+				if (waypoint.y-myPos.y > 3) // If too high, give up
+				{ goingToWaypoint = false; }
+				else
+				{ Jump(); }
+			}
+		}
+		
+		// Finish
+		if (Vector3.Distance(myPos,waypoint) < 0.5)
+		{ goingToWaypoint = false; }
+	}
+	else
+	{ preMoveVelocity = Vector2.Lerp(preMoveVelocity,Touch.offset,10*Time.deltaTime); }
+	
+	velocity.x += preMoveVelocity.x*speed*Time.deltaTime;
+	velocity.z += preMoveVelocity.y*speed*Time.deltaTime;
 }
 
 function TouchControls_v2()
@@ -142,7 +311,7 @@ function TouchControls_v2()
 	{
 		var ray : Ray = Camera.main.ScreenPointToRay( Input.mousePosition );
 		var hit : RaycastHit;
-		if( Physics.Raycast( ray, hit, 1000, 0x0001 ) )
+		if( Physics.Raycast( ray, hit, 1000, solidHitLayer ) )
 		{
 			var dir : Vector3 = hit.point - transform.position;
 			var is_surface_point = Vector3.Dot( hit.normal, Vector3(0,1,0) ) > 0.8;
@@ -236,9 +405,17 @@ function TouchControls()
 function Jump()
 {
 	if (!jump)
-	{ JumpUp(); }
+	{
+		anim.GetComponent.<Animation>().Stop("jump");
+		anim.GetComponent.<Animation>()["jump"].wrapMode = WrapMode.Once;
+		anim.GetComponent.<Animation>().CrossFade("jump", 0.1);
+		JumpUp();
+	}
 	else if (doubleJumpEnabled && !jumpDouble)
 	{
+		anim.GetComponent.<Animation>().Stop("jump");
+		anim.GetComponent.<Animation>()["jump"].wrapMode = WrapMode.Once; // Placeholder - will later use a flip animation
+		anim.GetComponent.<Animation>().CrossFade("jump", 0.1);
 		jumpDouble = true;
 		JumpUp();
 	}
@@ -263,6 +440,23 @@ function Stomp()
 	}
 }
 
+function OnTriggerStay(hit : Collider)
+{
+	if (hit.gameObject.layer == 10) // Item
+	{
+		if (hit.gameObject.GetComponent(scr_crystal))
+		{
+			var AudioObj = PlayClipAt(hit.gameObject.GetComponent(scr_crystal).getSound, hit.transform.position);
+			AudioObj.audio.minDistance = 20;
+			hit.gameObject.GetComponent(scr_crystal).Die();
+			
+			//Camera.main.GetComponent(hud).score += 200;
+			//Camera.main.GetComponent(hud).crystals += 1;
+		}
+	}
+}
+
+
 function OnControllerColliderHit(hit : ControllerColliderHit)
 {
 	if ( jump && ((controller.collisionFlags & CollisionFlags.Sides) || (controller.collisionFlags & CollisionFlags.Above)) )
@@ -281,5 +475,18 @@ function OnControllerColliderHit(hit : ControllerColliderHit)
 	{
 		enemy.Hit( velocity.y < -10 );
 	}
+}
+
+function PlayClipAt(clip: AudioClip, pos: Vector3)
+{
+	var tempGO = GameObject("TempAudio");
+	tempGO.transform.position = pos;
+	var aSource = tempGO.AddComponent(AudioSource);
+	aSource.clip = clip;
+
+	aSource.Play();
+	Destroy(tempGO, clip.length);
+	
+	return tempGO;
 }
 
