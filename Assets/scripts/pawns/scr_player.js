@@ -188,6 +188,11 @@ function Update()
 		// Gravity
 		velocity += Physics.gravity*Time.deltaTime;
 	}
+	else
+	{
+		if (Vector3(velocity.x,0,velocity.z).magnitude > 5)
+		{ ObstacleJumping(); }
+	}
 	
 	// Move body
 	controller.Move(velocity*Time.deltaTime);
@@ -207,7 +212,7 @@ function LateUpdate()
 		{ var turnTarget = Quaternion.LookRotation(Vector3(velocity.x,0,velocity.z), Vector3.up); }
 		
 		if (jump)
-		{ var animEuler = Vector3(0,0,Vector3(velocity.x,0,velocity.z).magnitude*velocity.y*10); }
+		{ var animEuler = Vector3(0,Vector3(velocity.x,0,velocity.z).magnitude*velocity.y*100,0); }
 		else
 		{ animEuler = Vector3.zero; }
 		
@@ -253,30 +258,14 @@ function TouchControls_v3()
 			{ goingToWaypoint = false; }
 		}
 		
-		var ray2 : Ray = new Ray( transform.position + Vector3(0,1.5,0), anim.rotation * Vector3(0,0,1) );
-	//	Debug.DrawLine( ray2.origin, ray2.origin + ray2.direction * 2 );
-		var hit : RaycastHit;
-		if( Vector2(velocity.x,velocity.z).magnitude > 0.5 &&
-			Physics.Raycast( ray2, hit, 2, quickJumpLayer ) &&
-			Mathf.Abs( Vector3.Dot( hit.normal, Vector3(0,1,0) ) ) < 0.1 &&
-			hit.point.z > transform.position.z )
-		{
-			ray2.origin = hit.point - hit.normal + Vector3(0,2,0);
-			ray2.direction = Vector3(0,-1,0);
-			if( Physics.Raycast( ray2, hit, 2, quickJumpLayer ) )
-			{
-				Jump();
-			}
-		}
-		
 		// Flicking
-		if (Touch.velocity.magnitude > 0)
+		/*if (Touch.velocity.magnitude > 0)
 		{ Touch.timer = 0.5; }
 		else
 		{
 			if (Touch.timer > 0)
 			{ Touch.timer -= Time.deltaTime; }
-		}
+		}*/
 	}
 	else
 	{ Touch.offset = Vector2.zero; }
@@ -339,6 +328,25 @@ function TouchControls_v3()
 	
 	velocity.x += preMoveVelocity.x*speed*Time.deltaTime;
 	velocity.z += preMoveVelocity.y*speed*Time.deltaTime;
+}
+
+function ObstacleJumping()
+{
+	var ray2 : Ray = new Ray( transform.position + Vector3(0,0.4,0), anim.rotation * Vector3(0,0,0.5) );
+	//	Debug.DrawLine( ray2.origin, ray2.origin + ray2.direction * 2 );
+	var hit : RaycastHit;
+	if( Vector2(velocity.x,velocity.z).magnitude > 0.5 &&
+		Physics.Raycast( ray2, hit, 2, quickJumpLayer ) &&
+		Mathf.Abs( Vector3.Dot( hit.normal, Vector3(0,1,0) ) ) < 0.1 &&
+		hit.point.z > transform.position.z )
+	{
+		ray2.origin = hit.point - hit.normal + Vector3(0,2,0);
+		ray2.direction = Vector3(0,-1,0);
+		if( Physics.Raycast( ray2, hit, 2, quickJumpLayer ) )
+		{
+			Jump();
+		}
+	}
 }
 
 function TouchControls_v2()
